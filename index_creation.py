@@ -29,15 +29,15 @@ def create_index_index_videos():
     return index, ids_index
 
 
-def index_video(row, index, ids_index):
+def index_video(video_index, video_description, video_movement_desc, video_speech_description, index, index_ids):
     with torch.no_grad():
-        text = ' '.join([row[1], row[2], row[3]])
+        text = ' '.join([video_speech_description, video_description, video_movement_desc])
         inputs = tokenizer(text, return_tensors='pt', truncation=True, padding=True, max_length=512)
         vector = model(**inputs.to(device)).last_hidden_state.mean(dim=1).squeeze().cpu().numpy()
 
     index.add(np.expand_dims(vector, axis=0))
-    ids_index.append(row[0])
-    return index, ids_index
+    index_ids.append(video_index)
+    return index, index_ids
 
 def _create_index(N):
     dim = 768
@@ -57,7 +57,7 @@ def _get_training_data(result):
     training_data = []
     for row in result:
         with torch.no_grad():
-            text = ' '.join([row[1], row[2]])
+            text = ' '.join([row[1], row[2], row[3]])
             inputs = tokenizer(text, return_tensors='pt', truncation=True, padding=True, max_length=512)
             vector = model(**inputs.to(device)).last_hidden_state.mean(dim=1).squeeze().cpu().numpy()
             training_data.append(vector)

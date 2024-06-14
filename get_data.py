@@ -26,18 +26,3 @@ def get_videos():
     logging.info(f"Получено видео: {len(result)}")
     return result
 
-def get_video(video_idx):
-    query = f'''
-        SELECT 
-            idx
-            , audio_description
-            , video_description
-            , user_description
-        FROM 
-            VideoIndex
-        WHERE
-            idx = {video_idx}
-        '''
-    result, columns = client.execute(query, with_column_types=True)
-    logging.info(f"Получено видео: {len(result)}")
-    return result
