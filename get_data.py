@@ -24,5 +24,5 @@ def get_videos():
 
     result, columns = client.execute(query, with_column_types=True)
     logging.info(f"Получено видео: {len(result)}")
-    return result
+    return result, columns
 
