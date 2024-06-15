@@ -40,7 +40,7 @@ def index_video(video_index, video_description, video_movement_desc, video_speec
     return index, index_ids
 
 def _create_index(N):
-    dim = 768
+    dim = 1024
     nlist = int(sqrt(N))
     m = 16
     bits = 8
