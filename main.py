@@ -70,6 +70,9 @@ def search(query: str):
         inputs = tokenizer(query, return_tensors='pt', truncation=True, padding=True, max_length=512)
         query_vector = model(**inputs.to(device)).last_hidden_state.mean(dim=1).squeeze().cpu().numpy()
 
+    if index is None:
+        index, index_ids = create_index_index_videos()
+
     D, I = index.search(np.expand_dims(query_vector, axis=0), k=1000)
     ids = [index_ids[idx] for idx in I[0]]
 

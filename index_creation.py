@@ -5,7 +5,7 @@ import numpy as np
 import faiss
 from math import sqrt
 
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 model_ckpt = "BAAI/bge-m3"
 tokenizer = AutoTokenizer.from_pretrained(model_ckpt)
@@ -20,7 +20,7 @@ def create_index_index_videos():
 
     for row in result:
         with torch.no_grad():
-            text = ' '.join([row[1], row[2]])
+            text = ' '.join([row[1], row[2], row[3]])
             inputs = tokenizer(text, return_tensors='pt', truncation=True, padding=True, max_length=512)
             vector = model(**inputs.to(device)).last_hidden_state.mean(dim=1).squeeze().cpu().numpy()
 
