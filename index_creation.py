@@ -47,7 +47,7 @@ def _create_index(N):
 
     quantiser = faiss.IndexFlatL2(dim)
     index = faiss.IndexIVFPQ(quantiser, dim, nlist, m, bits)
-    index.nprobe = 4
+    index.nprobe = 400
 
     ids_index = []
     return index, ids_index
