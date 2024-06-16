@@ -44,6 +44,12 @@ model_ckpt = "BAAI/bge-m3"
 tokenizer = AutoTokenizer.from_pretrained(model_ckpt)
 model = AutoModel.from_pretrained(model_ckpt).to(device)
 
+@app.on_event("startup")
+async def startup_event():
+    global index, index_ids
+    index, index_ids = create_index_index_videos()
+    logging.info("Index creation complete")
+
 @app.post("/create_video_index", response_model=CreateVideoIndexResponse)
 def create_video_index(indexInfo: IndexInfo):
     global index, index_ids
@@ -55,7 +61,7 @@ def create_video_index(indexInfo: IndexInfo):
         video_index = indexInfo.Index
 
         if index is None:
-            index, index_ids = create_index_index_videos()
+            raise HTTPException(status_code=503, detail="Index not yet initialized.")
 
         index, index_ids = index_video(video_index, video_description, video_movement_desc, video_speech_description, index, index_ids)
         return CreateVideoIndexResponse(status="Success")
@@ -74,7 +80,7 @@ def search(query: str):
         query_vector = model(**inputs.to(device)).last_hidden_state.mean(dim=1).squeeze().cpu().numpy()
 
     if index is None:
-        index, index_ids = create_index_index_videos()
+        raise HTTPException(status_code=503, detail="Index not yet initialized.")
 
     D, I = index.search(np.expand_dims(query_vector, axis=0), k=1000)
     ids = [index_ids[idx] for idx in I[0]]
