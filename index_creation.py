@@ -4,6 +4,7 @@ from transformers import AutoTokenizer, AutoModel
 import numpy as np
 import faiss
 from math import sqrt
+import logging
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -37,6 +38,7 @@ def index_video(video_index, video_description, video_movement_desc, video_speec
 
     index.add(np.expand_dims(vector, axis=0))
     index_ids.append(video_index)
+    logging.info(f"Обработка данных для создания индекса окончена")
     return index, index_ids
 
 def _create_index(N):
@@ -47,7 +49,7 @@ def _create_index(N):
 
     quantiser = faiss.IndexFlatL2(dim)
     index = faiss.IndexIVFPQ(quantiser, dim, nlist, m, bits)
-    index.nprobe = 400
+    index.nprobe = 100
 
     ids_index = []
     return index, ids_index

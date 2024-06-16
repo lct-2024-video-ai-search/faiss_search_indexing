@@ -2,8 +2,8 @@ import logging
 import torch
 
 from typing import Union
-from pydantic import BaseModel
-from fastapi import FastAPI
+from pydantic import BaseModel, ValidationError
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from transformers import AutoTokenizer, AutoModel
@@ -13,7 +13,7 @@ from index_creation import create_index_index_videos, index_video
 class IndexInfo(BaseModel):
     VideoDescription: str
     VideoMovementDesc: str
-    VideoSpeechDescription: str
+    SpeechDescription: str
     Index: int
 
 class Object(BaseModel):
@@ -39,8 +39,6 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 logging.basicConfig(level=logging.INFO)
 logging.info(f"Доступна ли видеокарта? Ответ: {torch.cuda.is_available()}")
 
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-
 index, index_ids = None, None
 model_ckpt = "BAAI/bge-m3"
 tokenizer = AutoTokenizer.from_pretrained(model_ckpt)
@@ -50,16 +48,21 @@ model = AutoModel.from_pretrained(model_ckpt).to(device)
 def create_video_index(indexInfo: IndexInfo):
     global index, index_ids
 
-    video_description = indexInfo.VideoDescription
-    video_movement_desc = indexInfo.VideoMovementDesc
-    video_speech_description = indexInfo.VideoSpeechDescription
-    video_index = indexInfo.Index
+    try:
+        video_description = indexInfo.VideoDescription
+        video_movement_desc = indexInfo.VideoMovementDesc
+        video_speech_description = indexInfo.SpeechDescription
+        video_index = indexInfo.Index
 
-    if index is None:
-        index, index_ids = create_index_index_videos()
+        if index is None:
+            index, index_ids = create_index_index_videos()
 
-    index, index_ids = index_video(video_index, video_description, video_movement_desc, video_speech_description, index, index_ids)
-    return CreateVideoIndexResponse(status="Success")
+        index, index_ids = index_video(video_index, video_description, video_movement_desc, video_speech_description, index, index_ids)
+        return CreateVideoIndexResponse(status="Success")
+    except ValidationError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/search", response_model=SearchResponse)
